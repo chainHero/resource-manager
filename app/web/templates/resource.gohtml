@@ -1,0 +1,77 @@
+{{/*
+    Copyright 2018 Antoine CHABERT, toHero.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/}}
+
+{{define "title"}}Resource details{{end}}
+
+{{define "body"}}
+<h1>Resource detail{{if .IsDeleted}} - Deleted{{end}}</h1>
+
+<div class="resource-id">
+    ID: {{.Resource.ID}}
+</div>
+
+<div class="resource-description">
+    Description: {{.Resource.Description}}
+</div>
+
+{{if not .IsDeleted}}
+<div class="resource-available">
+    Available:
+{{if .Resource.Available}}
+    <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+{{else}}
+    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+{{end}}
+</div>
+{{end}}
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Mission</th>
+            <th>Transaction</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{range $id, $history := .Histories}}
+        <tr>
+            <td>{{$history.Time.Format "Jan 02, 2006 15:04:05 UTC"}}</td>
+            <td>
+            {{if $history.Deleted}}
+                Deleted
+            {{else if $history.Resource.Available}}
+                Available
+            {{else}}
+                Unavailable
+            {{end}}
+            </td>
+            <td>
+            {{if $history.Resource.Available}}
+                Not in mission
+            {{else}}
+                {{$history.Resource.Mission}}
+            {{end}}
+            </td>
+            <td>{{$history.Transaction}}</td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}

@@ -1,0 +1,113 @@
+{{/*
+    Copyright 2018 Antoine CHABERT, toHero.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/}}
+
+{{define "title"}}Resources{{end}}
+
+{{define "body"}}
+<h1>Resources</h1>
+
+{{if .IsAdmin}}
+<a href="/add-resource" class="btn btn-primary">
+    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Add a resource
+</a>
+{{end}}
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Description</th>
+            <th>Available</th>
+            {{if .IsAdmin}}
+            <th>Mission</th>
+            {{end}}
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{range $id, $resource := .Resources}}
+        <tr>
+            <td>{{$resource.ID}}</td>
+            <td>{{$resource.Description}}</td>
+            <td>
+            {{if $resource.Available}}
+                <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+            {{else}}
+                <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+            {{end}}
+            </td>
+            {{if $.IsAdmin}}
+            <td>{{$resource.Mission}}</td>
+            {{end}}
+            <td>
+                {{if $resource.Available}}
+                    {{if $.IsAdmin}}
+                <a href="/delete-resource?id={{$resource.ID}}" class="btn btn-sm btn-danger">
+                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Delete
+                </a>
+                    {{else}}
+                <a href="/acquire-resource?id={{$resource.ID}}" class="btn btn-sm btn-success">
+                    <span class="glyphicon glyphicon-log-in" aria-hidden="true"></span> Acquire
+                </a>
+                    {{end}}
+                {{else}}
+                <a href="/release-resource?id={{$resource.ID}}" class="btn btn-sm btn-danger">
+                    <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span> Release
+                </a>
+                {{end}}
+                {{if $.IsAdmin}}
+                <a href="/resource?id={{$resource.ID}}" class="btn btn-sm btn-default">
+                    <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span> Detail
+                </a>
+                {{end}}
+            </td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table>
+</div>
+
+{{if .IsAdmin}}
+<h2>Deleted resources</h2>
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Description</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{range $id, $resource := .ResourcesDeleted}}
+        <tr>
+            <td>{{$resource.ID}}</td>
+            <td>{{$resource.Description}}</td>
+            <td>
+                <a href="/resource?id={{$resource.ID}}" class="btn btn-sm btn-default">
+                    <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span> Detail
+                </a>
+            </td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}
+
+{{end}}

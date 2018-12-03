@@ -1,0 +1,47 @@
+{{/*
+    Copyright 2018 Antoine CHABERT, toHero.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/}}
+
+{{define "title"}}Add a resource{{end}}
+
+{{define "body"}}
+<h1>Add a resource</h1>
+
+{{if .Response}}
+{{if .Success}}
+<div class="alert alert-success" role="alert">
+    New resource created in the ledger.
+</div>
+{{else}}
+<div class="alert alert-danger" role="alert">
+    Unable to submit the resource creation, retry later. Detail: <pre>{{.Error}}</pre>
+</div>
+{{end}}
+{{end}}
+
+<form action="/add-resource" method="post">
+    <div class="form-group">
+        <label for="id">Identifier</label>
+        <input type="text" class="form-control" id="id" name="id">
+    </div>
+    <div class="form-group">
+        <label for="description">Description</label>
+        <textarea class="form-control" rows="1" id="description" name="description"></textarea>
+    </div>
+    <input type="hidden" name="submitted" value="true">
+    <button type="submit" class="btn btn-default">Add the resource</button>
+</form>
+
+{{end}}

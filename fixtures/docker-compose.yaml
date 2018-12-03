@@ -1,0 +1,167 @@
+# Copyright 2018 Antoine CHABERT, toHero.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+version: '2'
+
+services:
+
+  orderer.hf.chainhero.io:
+    image: ${FABRIC_DOCKER_REGISTRY}${FABRIC_ORDERER_FIXTURE_IMAGE}:${ARCH}${ARCH_SEP}${FABRIC_ORDERER_FIXTURE_TAG}
+    hostname: orderer.hf.chainhero.io
+    env_file:
+      - ./env/orderer.env
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderer
+    command: orderer
+    volumes:
+      - ./artifacts/genesis.block:/etc/hyperledger/configtx/genesis.block
+      - ./crypto-config/ordererOrganizations/hf.chainhero.io/orderers/orderer.hf.chainhero.io/msp:/etc/hyperledger/msp/orderer
+      - ./crypto-config/ordererOrganizations/hf.chainhero.io/orderers/orderer.hf.chainhero.io/tls:/etc/hyperledger/tls/orderer
+      - ./crypto-config/peerOrganizations/tls.hf.chainhero.io/tlsca:/etc/hyperledger/tlsca
+    ports:
+      - "7050:7050"
+    expose:
+      - "7050"
+    networks:
+      default:
+        aliases:
+          - orderer.hf.chainhero.io
+
+  ca.org1.hf.chainhero.io:
+    image: ${FABRIC_DOCKER_REGISTRY}${FABRIC_CA_FIXTURE_IMAGE}:${ARCH}${ARCH_SEP}${FABRIC_CA_FIXTURE_TAG}
+    hostname: ca.org1.hf.chainhero.io
+    env_file:
+      - ./env/ca.env
+    ports:
+      - "7054:7054"
+    expose:
+      - "7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/org1.hf.chainhero.io/ca/:/etc/hyperledger/fabric-ca-server-config
+      - ./crypto-config/peerOrganizations/org1.hf.chainhero.io/peers/ca.org1.hf.chainhero.io/tls:/etc/hyperledger/tls/peer
+      - ./crypto-config/peerOrganizations/tls.hf.chainhero.io/tlsca:/etc/hyperledger/tlsca
+    networks:
+      default:
+        aliases:
+          - ca.org1.hf.chainhero.io
+
+  couchdb.peer0.org1.hf.chainhero.io:
+    image: ${FABRIC_DOCKER_REGISTRY}${FABRIC_COUCHDB_FIXTURE_IMAGE}:${ARCH}${ARCH_SEP}${FABRIC_COUCHDB_FIXTURE_TAG}
+    hostname: couchdb.peer0.org1.hf.chainhero.io
+    env_file:
+      - ./env/couchdb.env
+    ports:
+      - "5984:5984"
+    expose:
+      - "5984"
+    networks:
+      default:
+        aliases:
+          - couchdb.peer0.org1.hf.chainhero.io
+
+  peer0.org1.hf.chainhero.io:
+    image: ${FABRIC_DOCKER_REGISTRY}${FABRIC_PEER_FIXTURE_IMAGE}:${ARCH}${ARCH_SEP}${FABRIC_PEER_FIXTURE_TAG}
+    hostname: peer0.org1.hf.chainhero.io
+    env_file:
+      - ./env/peer.env
+    environment:
+      - CORE_PEER_ID=peer0.org1.hf.chainhero.io
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.hf.chainhero.io:7051
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.peer0.org1.hf.chainhero.io:5984
+      - CORE_PEER_CHAINCODELISTENADDRESS=peer0.org1.hf.chainhero.io:7052
+      - CORE_PEER_TLS_SERVERHOSTOVERRIDE=peer0.org1.hf.chainhero.io
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.org1.hf.chainhero.io:7051
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: peer node start
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/org1.hf.chainhero.io/peers/peer0.org1.hf.chainhero.io/msp:/etc/hyperledger/msp/peer
+      - ./crypto-config/peerOrganizations/org1.hf.chainhero.io/peers/peer0.org1.hf.chainhero.io/tls:/etc/hyperledger/tls/peer
+      - ./crypto-config/peerOrganizations/tls.hf.chainhero.io/tlsca:/etc/hyperledger/tlsca
+    ports:
+      - "7051:7051"
+    expose:
+      - "7051"
+      - "7052"
+    depends_on:
+      - orderer.hf.chainhero.io
+      - couchdb.peer0.org1.hf.chainhero.io
+      - builder
+      - golangruntime
+    networks:
+      default:
+        aliases:
+          - peer0.org1.hf.chainhero.io
+
+  couchdb.peer1.org1.hf.chainhero.io:
+    image: ${FABRIC_DOCKER_REGISTRY}${FABRIC_COUCHDB_FIXTURE_IMAGE}:${ARCH}${ARCH_SEP}${FABRIC_COUCHDB_FIXTURE_TAG}
+    hostname: couchdb.peer1.org1.hf.chainhero.io
+    env_file:
+      - ./env/couchdb.env
+    ports:
+      - "6984:5984"
+    expose:
+      - "5984"
+    networks:
+      default:
+        aliases:
+          - couchdb.peer1.org1.hf.chainhero.io
+
+  peer1.org1.hf.chainhero.io:
+    image: ${FABRIC_DOCKER_REGISTRY}${FABRIC_PEER_FIXTURE_IMAGE}:${ARCH}${ARCH_SEP}${FABRIC_PEER_FIXTURE_TAG}
+    hostname: peer1.org1.hf.chainhero.io
+    env_file:
+      - ./env/peer.env
+    environment:
+      - CORE_PEER_ID=peer1.org1.hf.chainhero.io
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org1.hf.chainhero.io:7051
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.peer1.org1.hf.chainhero.io:5984
+      - CORE_PEER_CHAINCODELISTENADDRESS=peer1.org1.hf.chainhero.io:7052
+      - CORE_PEER_TLS_SERVERHOSTOVERRIDE=peer1.org1.hf.chainhero.io
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.hf.chainhero.io:7051
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: peer node start
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/org1.hf.chainhero.io/peers/peer1.org1.hf.chainhero.io/msp:/etc/hyperledger/msp/peer
+      - ./crypto-config/peerOrganizations/org1.hf.chainhero.io/peers/peer1.org1.hf.chainhero.io/tls:/etc/hyperledger/tls/peer
+      - ./crypto-config/peerOrganizations/tls.hf.chainhero.io/tlsca:/etc/hyperledger/tlsca
+    ports:
+      - "7061:7051"
+    expose:
+      - "7051"
+      - "7052"
+    depends_on:
+      - orderer.hf.chainhero.io
+      - couchdb.peer1.org1.hf.chainhero.io
+      - builder
+      - golangruntime
+    networks:
+      default:
+        aliases:
+          - peer1.org1.hf.chainhero.io
+
+ # builder is only here to create a dependency on the image (not used as part of compose)
+  builder:
+    image: ${FABRIC_DOCKER_REGISTRY}${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}${ARCH_SEP}${FABRIC_BUILDER_FIXTURE_TAG}
+    command: tail -F anything
+    logging:
+      driver: none
+
+ # golangruntime is only here to create a dependency on the image (not used as part of compose)
+  golangruntime:
+    image: ${FABRIC_DOCKER_REGISTRY}${FABRIC_BASEOS_FIXTURE_IMAGE}:${ARCH}${ARCH_SEP}${FABRIC_BASEOS_FIXTURE_TAG}
+    command: tail -F anything
+    logging:
+      driver: none
