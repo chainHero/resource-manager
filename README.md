@@ -1,5 +1,7 @@
 # Getting Started with Hyperledger Fabric
 
+![Go Report](https://goreportcard.com/badge/github.com/chainHero/resource-manager)
+
 **Hyperledger Global Forum 2018 - Workshop**
 
 This repository contains all the code for Hyperledger Fabric's learning workshop using exclusively Golang.
