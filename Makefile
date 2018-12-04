@@ -54,7 +54,7 @@ test:
 
 lint:
 	@echo "Lint..."
-	@gometalinter --vendor --deadline=8m --exclude=app/vendor --exclude=chaincode/vendor ./...
+	@gometalinter --vendor --deadline=8m --exclude=app/vendor --exclude=chaincode/vendor --cyclo-over=15 ./...
 	@echo "Lint done"
 
 ##### CLEAN

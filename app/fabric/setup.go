@@ -80,7 +80,7 @@ func (s *Setup) Initialize() error {
 
 // Install reads the configuration stored in the Setup struct and sets up the blockchain channel and chaincode
 func (s *Setup) Install() error {
-	fmt.Printf("Preparing contextes to create channel...\n")
+	fmt.Printf("Preparing contexts to create channel...\n")
 
 	//clientContext allows creation of transactions using the supplied identity as the credential.
 	clientContext := s.sdk.Context(fabsdk.WithUser(s.OrgAdminUser), fabsdk.WithOrg(s.OrdererOrgID))
@@ -98,7 +98,7 @@ func (s *Setup) Install() error {
 		return fmt.Errorf("unable to create the channel: %v", err)
 	}
 
-	fmt.Printf("Preparing contextes to make peers joinning the new channel...\n")
+	fmt.Printf("Preparing contexts to make peers joinning the new channel...\n")
 
 	// Prepare context
 	adminContext := s.sdk.Context(fabsdk.WithUser(s.OrgAdminUser), fabsdk.WithOrg(s.OrgID))

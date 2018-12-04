@@ -147,17 +147,9 @@ func (t *ResourceManagerChaincode) resources(stub shim.ChaincodeStubInterface, a
 		if err != nil {
 			return shim.Error(fmt.Sprintf("Unable to convert a resource: %v", err))
 		}
-		// If the request owner is a consumer, we give only available resources or its  previously acquired
-		if model.ActorConsumer == actorType && !resource.Available && resource.Consumer != actorID {
-			continue
+		if isResourceCanBeReturned(actorID, actorType, filter, &resource) {
+			resources = append(resources, resource)
 		}
-		if filter == model.ResourcesFilterOnlyAvailable && !resource.Available {
-			continue
-		}
-		if filter == model.ResourcesFilterOnlyUnavailable && resource.Available {
-			continue
-		}
-		resources = append(resources, resource)
 	}
 
 	resourcesAsByte, err := objectToByte(resources)
@@ -166,6 +158,21 @@ func (t *ResourceManagerChaincode) resources(stub shim.ChaincodeStubInterface, a
 	}
 
 	return shim.Success(resourcesAsByte)
+}
+
+// isResourceCanBeReturned check if the resource can be return to the given actor and filter given.
+func isResourceCanBeReturned(actorID string, actorType string, filter string, resource *model.Resource) bool {
+	// If the request owner is a consumer, we give only available resources or its  previously acquired
+	if model.ActorConsumer == actorType && !resource.Available && resource.Consumer != actorID {
+		return false
+	}
+	if filter == model.ResourcesFilterOnlyAvailable && !resource.Available {
+		return false
+	}
+	if filter == model.ResourcesFilterOnlyUnavailable && resource.Available {
+		return false
+	}
+	return true
 }
 
 func (t *ResourceManagerChaincode) resourcesDeleted(stub shim.ChaincodeStubInterface, args []string) pb.Response {
