@@ -39,18 +39,6 @@ func (t *ResourceManagerChaincode) update(stub shim.ChaincodeStubInterface, args
 		return t.add(stub, args[1:])
 	}
 
-	if args[0] == "delete" {
-		return t.delete(stub, args[1:])
-	}
-
-	if args[0] == "acquire" {
-		return t.acquire(stub, args[1:])
-	}
-
-	if args[0] == "release" {
-		return t.release(stub, args[1:])
-	}
-
 	// If the arguments given don’t match any function, we return an error
 	return shim.Error("Unknown update action, check the second argument.")
 }
@@ -125,216 +113,17 @@ func (t *ResourceManagerChaincode) add(stub shim.ChaincodeStubInterface, args []
 
 	fmt.Println("# add resource")
 
-	err := cid.AssertAttributeValue(stub, model.ActorAttribute, model.ActorAdmin)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Only admin is allowed for the kind of request: %v", err))
-	}
+	// TODO Implement this method in order to allow an admin (and only admin users) to create a new resource using arguments provided:
+	//  - args[0] resource ID
+	//  - args[1] resource description
+	// Tips:
+	//  - read and understand the method register above
+	//  - check arguments
+	//  - check the identity of the user using the cid library (chaincode/vendor/github.com/hyperledger/fabric/core/chaincode/lib/cid/interfaces.go)
+	//  - use utils functions provided (chaincode/util.go)
+	//  - use struct provided in model (chaincode/model/model.go)
 
-	if len(args) < 2 {
-		return shim.Error("The number of arguments is insufficient.")
-	}
+	fmt.Printf("Resource created:\n  ID -> %s\n  Description -> %s\n")
 
-	resourceID := args[0]
-	if resourceID == "" {
-		return shim.Error("The resource ID is empty.")
-	}
-
-	resourceDescription := args[1]
-	if resourceDescription == "" {
-		return shim.Error("The resource description is empty.")
-	}
-
-	resource := model.Resource{
-		ID:          resourceID,
-		Description: resourceDescription,
-		Available:   true,
-	}
-	err = updateInLedger(stub, model.ObjectTypeResource, resourceID, resource)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable to create the resource in the ledger: %v", err))
-	}
-
-	resourceAsByte, err := objectToByte(resource)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable convert the resource to byte: %v", err))
-	}
-
-	fmt.Printf("Resource created:\n  ID -> %s\n  Description -> %s\n", resourceID, resourceDescription)
-
-	return shim.Success(resourceAsByte)
-}
-
-func (t *ResourceManagerChaincode) delete(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-
-	fmt.Println("# delete resource")
-
-	err := cid.AssertAttributeValue(stub, model.ActorAttribute, model.ActorAdmin)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Only admin is allowed for the kind of request: %v", err))
-	}
-
-	if len(args) < 1 {
-		return shim.Error("The number of arguments is insufficient.")
-	}
-
-	resourceID := args[0]
-	if resourceID == "" {
-		return shim.Error("The resource ID is empty.")
-	}
-
-	var resource model.Resource
-	err = getFromLedger(stub, model.ObjectTypeResource, resourceID, &resource)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable to retrieve the resource in the ledger: %v", err))
-	}
-
-	if !resource.Available {
-		return shim.Error("The resource can't be deleted because it is currently acquired by a consumer")
-	}
-
-	err = deleteFromLedger(stub, model.ObjectTypeResource, resourceID)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable to delete the resource in the ledger: %v", err))
-	}
-
-	var resourcesDeleted model.ResourcesDeleted
-	err = getFromLedger(stub, model.ObjectTypeResourcesDeleted, "", &resourcesDeleted)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable to retrieve the list of deleted resources in the ledger: %v", err))
-	}
-	resourcesDeleted = append(resourcesDeleted, resource)
-	err = updateInLedger(stub, model.ObjectTypeResourcesDeleted, "", resourcesDeleted)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable to update the list of deleted resources in the ledger: %v", err))
-	}
-
-	fmt.Printf("Resource deleted:\n  ID -> %s\n  Description -> %s\n", resourceID, resource.Description)
-
-	return shim.Success(nil)
-}
-
-func (t *ResourceManagerChaincode) acquire(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-
-	fmt.Println("# acquire resource")
-
-	err := cid.AssertAttributeValue(stub, model.ActorAttribute, model.ActorConsumer)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Only consumer is allowed for the kind of request: %v", err))
-	}
-
-	if len(args) < 2 {
-		return shim.Error("The number of arguments is insufficient.")
-	}
-
-	resourceID := args[0]
-	if resourceID == "" {
-		return shim.Error("The resource ID is empty.")
-	}
-
-	mission := args[1]
-	if mission == "" {
-		return shim.Error("The mission is empty.")
-	}
-
-	var resource model.Resource
-	err = getFromLedger(stub, model.ObjectTypeResource, resourceID, &resource)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable to find the resource in the ledger: %v", err))
-	}
-
-	if !resource.Available {
-		return shim.Error(fmt.Sprintf("The resource ID '%s' is not available", resourceID))
-	}
-
-	consumerID, err := cid.GetID(stub)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable to identify the ID of the request owner: %v", err))
-	}
-
-	resource.Consumer = consumerID
-	resource.Mission = mission
-	resource.Available = false
-
-	err = updateInLedger(stub, model.ObjectTypeResource, resourceID, resource)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable to update the resource in the ledger: %v", err))
-	}
-
-	resourceAsByte, err := objectToByte(resource)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable convert the resource to byte: %v", err))
-	}
-
-	fmt.Printf("Resource acquired:\n  ID -> %s\n  Consumer ID -> %s\n  Mission -> %s\n", resourceID, consumerID, mission)
-
-	return shim.Success(resourceAsByte)
-}
-
-func (t *ResourceManagerChaincode) release(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-
-	fmt.Println("# release resource")
-
-	if len(args) < 1 {
-		return shim.Error("The number of arguments is insufficient.")
-	}
-
-	resourceID := args[0]
-	if resourceID == "" {
-		return shim.Error("The resource ID is empty.")
-	}
-
-	var resource model.Resource
-	err := getFromLedger(stub, model.ObjectTypeResource, resourceID, &resource)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable to find the resource in the ledger: %v", err))
-	}
-
-	if resource.Available {
-		return shim.Error(fmt.Sprintf("The resource ID '%s' is not acquired", resourceID))
-	}
-
-	actorType, found, err := cid.GetAttributeValue(stub, model.ActorAttribute)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable to identify the type of the request owner: %v", err))
-	}
-	if !found {
-		return shim.Error("The type of the request owner is not present")
-	}
-
-	if len(args) < 1 {
-		return shim.Error("The number of arguments is insufficient.")
-	}
-
-	switch actorType {
-	case model.ActorAdmin:
-	case model.ActorConsumer:
-		var consumerID string
-		consumerID, err = cid.GetID(stub)
-		if err != nil {
-			return shim.Error(fmt.Sprintf("Unable to identify the ID of the request owner: %v", err))
-		}
-		if consumerID != resource.Consumer {
-			return shim.Error("Unable to release a resource that you don't previously acquire")
-		}
-	default:
-		return shim.Error("The type of the request owner is unknown")
-	}
-
-	resource.Consumer = ""
-	resource.Mission = ""
-	resource.Available = true
-
-	err = updateInLedger(stub, model.ObjectTypeResource, resourceID, resource)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable to update the resource in the ledger: %v", err))
-	}
-
-	resourceAsByte, err := objectToByte(resource)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable convert the resource to byte: %v", err))
-	}
-
-	fmt.Printf("Resource release:\n  ID -> %s\n", resourceID)
-
-	return shim.Success(resourceAsByte)
+	return shim.Error("not implemented in chaincode")
 }

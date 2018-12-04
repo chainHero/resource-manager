@@ -54,21 +54,6 @@
             <td>{{$resource.Mission}}</td>
             {{end}}
             <td>
-                {{if $resource.Available}}
-                    {{if $.IsAdmin}}
-                <a href="/delete-resource?id={{$resource.ID}}" class="btn btn-sm btn-danger">
-                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Delete
-                </a>
-                    {{else}}
-                <a href="/acquire-resource?id={{$resource.ID}}" class="btn btn-sm btn-success">
-                    <span class="glyphicon glyphicon-log-in" aria-hidden="true"></span> Acquire
-                </a>
-                    {{end}}
-                {{else}}
-                <a href="/release-resource?id={{$resource.ID}}" class="btn btn-sm btn-danger">
-                    <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span> Release
-                </a>
-                {{end}}
                 {{if $.IsAdmin}}
                 <a href="/resource?id={{$resource.ID}}" class="btn btn-sm btn-default">
                     <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span> Detail
@@ -80,34 +65,4 @@
         </tbody>
     </table>
 </div>
-
-{{if .IsAdmin}}
-<h2>Deleted resources</h2>
-
-<div class="table-responsive">
-    <table class="table">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Description</th>
-            <th>Action</th>
-        </tr>
-        </thead>
-        <tbody>
-        {{range $id, $resource := .ResourcesDeleted}}
-        <tr>
-            <td>{{$resource.ID}}</td>
-            <td>{{$resource.Description}}</td>
-            <td>
-                <a href="/resource?id={{$resource.ID}}" class="btn btn-sm btn-default">
-                    <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span> Detail
-                </a>
-            </td>
-        </tr>
-        {{end}}
-        </tbody>
-    </table>
-</div>
-{{end}}
-
 {{end}}

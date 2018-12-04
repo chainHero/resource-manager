@@ -44,10 +44,6 @@ func (t *ResourceManagerChaincode) query(stub shim.ChaincodeStubInterface, args 
 		return t.resources(stub, args[1:])
 	}
 
-	if args[0] == "resources-deleted" {
-		return t.resourcesDeleted(stub, args[1:])
-	}
-
 	if args[0] == "resource" {
 		return t.resource(stub, args[1:])
 	}
@@ -173,29 +169,6 @@ func isResourceCanBeReturned(actorID string, actorType string, filter string, re
 		return false
 	}
 	return true
-}
-
-func (t *ResourceManagerChaincode) resourcesDeleted(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-
-	fmt.Println("# resources deleted list")
-
-	err := cid.AssertAttributeValue(stub, model.ActorAttribute, model.ActorAdmin)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Only admin is allowed for the kind of request: %v", err))
-	}
-
-	var resourcesDeleted model.ResourcesDeleted
-	err = getFromLedger(stub, model.ObjectTypeResourcesDeleted, "", &resourcesDeleted)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable to retrieve consumer in the ledger: %v", err))
-	}
-
-	resourcesDeletedAsByte, err := objectToByte(resourcesDeleted)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable to convert the list of resource deleted to byte: %v", err))
-	}
-
-	return shim.Success(resourcesDeletedAsByte)
 }
 
 func (t *ResourceManagerChaincode) resource(stub shim.ChaincodeStubInterface, args []string) pb.Response {

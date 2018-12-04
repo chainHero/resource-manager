@@ -16,6 +16,7 @@ package fabric
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
@@ -49,20 +50,8 @@ func (u *User) UpdateRegister() error {
 
 // UpdateAdd allow to add a resource into the blockchain
 func (u *User) UpdateAdd(resourceID, resourceDescription string) error {
-	return u.update([][]byte{[]byte("add"), []byte(resourceID), []byte(resourceDescription)}, nil)
-}
-
-// UpdateDelete allow to delete a resource into the blockchain
-func (u *User) UpdateDelete(resourceID string) error {
-	return u.update([][]byte{[]byte("delete"), []byte(resourceID)}, nil)
-}
-
-// UpdateAcquire allow to acquire a resource into the blockchain
-func (u *User) UpdateAcquire(resourceID string, mission string) error {
-	return u.update([][]byte{[]byte("acquire"), []byte(resourceID), []byte(mission)}, nil)
-}
-
-// UpdateRelease allow to release a resource into the blockchain
-func (u *User) UpdateRelease(resourceID string) error {
-	return u.update([][]byte{[]byte("release"), []byte(resourceID)}, nil)
+	// TODO implement the call to the chaincode using arguments provided 'resourceID' and 'resourceDescription'
+	// Tips:
+	//  - read and understand the method 'UpdateRegister' and 'update' above
+	return errors.New("not implemented in app fabric update")
 }
