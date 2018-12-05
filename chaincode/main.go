@@ -16,7 +16,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/chainHero/resource-manager/chaincode/model"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
@@ -37,12 +36,6 @@ func (t *ResourceManagerChaincode) Init(stub shim.ChaincodeStubInterface) pb.Res
 	// Check if the request is the init function
 	if function != "init" {
 		return shim.Error("Unknown function call")
-	}
-
-	var deletedResources []model.Resource
-	err := updateInLedger(stub, model.ObjectTypeResourcesDeleted, "", deletedResources)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Unable to initialize the deleted resources map: %v", err))
 	}
 
 	// Return a successful message
