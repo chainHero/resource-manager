@@ -39,12 +39,9 @@ func (t *ResourceManagerChaincode) update(stub shim.ChaincodeStubInterface, args
 		return t.add(stub, args[1:])
 	}
 
-	// TODO implement the acquire update request using arguments provided:
-	//  - args[1] the resource ID
-	//  - args[2] the mission
-	// Tips:
-	//  - check that the resource is available before acquire
-	//  - check the identity, only consumer can perform this request
+	if args[0] == "acquire" {
+		return t.acquire(stub, args[1:])
+	}
 
 	// If the arguments given don’t match any function, we return an error
 	return shim.Error("Unknown update action, check the second argument.")
@@ -155,6 +152,63 @@ func (t *ResourceManagerChaincode) add(stub shim.ChaincodeStubInterface, args []
 	}
 
 	fmt.Printf("Resource created:\n  ID -> %s\n  Description -> %s\n", resourceID, resourceDescription)
+
+	return shim.Success(resourceAsByte)
+}
+
+func (t *ResourceManagerChaincode) acquire(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+
+	fmt.Println("# acquire resource")
+
+	err := cid.AssertAttributeValue(stub, model.ActorAttribute, model.ActorConsumer)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Only consumer is allowed for the kind of request: %v", err))
+	}
+
+	if len(args) < 2 {
+		return shim.Error("The number of arguments is insufficient.")
+	}
+
+	resourceID := args[0]
+	if resourceID == "" {
+		return shim.Error("The resource ID is empty.")
+	}
+
+	mission := args[1]
+	if mission == "" {
+		return shim.Error("The mission is empty.")
+	}
+
+	var resource model.Resource
+	err = getFromLedger(stub, model.ObjectTypeResource, resourceID, &resource)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Unable to find the resource in the ledger: %v", err))
+	}
+
+	if !resource.Available {
+		return shim.Error(fmt.Sprintf("The resource ID '%s' is not available", resourceID))
+	}
+
+	consumerID, err := cid.GetID(stub)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Unable to identify the ID of the request owner: %v", err))
+	}
+
+	resource.Consumer = consumerID
+	resource.Mission = mission
+	resource.Available = false
+
+	err = updateInLedger(stub, model.ObjectTypeResource, resourceID, resource)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Unable to update the resource in the ledger: %v", err))
+	}
+
+	resourceAsByte, err := objectToByte(resource)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Unable convert the resource to byte: %v", err))
+	}
+
+	fmt.Printf("Resource acquired:\n  ID -> %s\n  Consumer ID -> %s\n  Mission -> %s\n", resourceID, consumerID, mission)
 
 	return shim.Success(resourceAsByte)
 }
