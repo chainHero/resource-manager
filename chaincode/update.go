@@ -113,17 +113,41 @@ func (t *ResourceManagerChaincode) add(stub shim.ChaincodeStubInterface, args []
 
 	fmt.Println("# add resource")
 
-	// TODO Implement this method in order to allow an admin (and only admin users) to create a new resource using arguments provided:
-	//  - args[0] resource ID
-	//  - args[1] resource description
-	// Tips:
-	//  - read and understand the method register above
-	//  - check arguments
-	//  - check the identity of the user using the cid library (chaincode/vendor/github.com/hyperledger/fabric/core/chaincode/lib/cid/interfaces.go)
-	//  - use utils functions provided (chaincode/util.go)
-	//  - use struct provided in model (chaincode/model/model.go)
+	err := cid.AssertAttributeValue(stub, model.ActorAttribute, model.ActorAdmin)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Only admin is allowed for the kind of request: %v", err))
+	}
 
-	fmt.Printf("Resource created:\n  ID -> %s\n  Description -> %s\n")
+	if len(args) < 2 {
+		return shim.Error("The number of arguments is insufficient.")
+	}
 
-	return shim.Error("not implemented in chaincode")
+	resourceID := args[0]
+	if resourceID == "" {
+		return shim.Error("The resource ID is empty.")
+	}
+
+	resourceDescription := args[1]
+	if resourceDescription == "" {
+		return shim.Error("The resource description is empty.")
+	}
+
+	resource := model.Resource{
+		ID:          resourceID,
+		Description: resourceDescription,
+		Available:   true,
+	}
+	err = updateInLedger(stub, model.ObjectTypeResource, resourceID, resource)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Unable to create the resource in the ledger: %v", err))
+	}
+
+	resourceAsByte, err := objectToByte(resource)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Unable convert the resource to byte: %v", err))
+	}
+
+	fmt.Printf("Resource created:\n  ID -> %s\n  Description -> %s\n", resourceID, resourceDescription)
+
+	return shim.Success(resourceAsByte)
 }
