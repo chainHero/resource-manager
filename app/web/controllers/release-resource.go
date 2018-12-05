@@ -43,13 +43,14 @@ func (c *Controller) ReleaseResourceHandler() func(http.ResponseWriter, *http.Re
 			Username:            u.Username,
 		}
 		if r.FormValue(formSubmittedKey) == formSubmittedValue {
-
-			// TODO implement the submit part in order to release a resource. Use 'id' provided in form parameter.
-			// Tips:
-			//  - read and understand the add and acquire form submit
-
+			resourceID := r.FormValue("resource")
+			err := u.UpdateRelease(resourceID)
+			if err != nil {
+				data.Error = fmt.Sprintf("Unable to make the transaction in the ledger: %v", err)
+			} else {
+				data.Success = true
+			}
 			data.Response = true
-			data.Error = "Unable to make the transaction in the ledger: not implemented in controller ReleaseResourceHandler"
 		}
 
 		resources, err := u.QueryResources(model.ResourcesFilterOnlyUnavailable)

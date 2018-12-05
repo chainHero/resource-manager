@@ -56,3 +56,8 @@ func (u *User) UpdateAdd(resourceID, resourceDescription string) error {
 func (u *User) UpdateAcquire(resourceID string, mission string) error {
 	return u.update([][]byte{[]byte("acquire"), []byte(resourceID), []byte(mission)}, nil)
 }
+
+// UpdateRelease allow to release a resource into the blockchain
+func (u *User) UpdateRelease(resourceID string) error {
+	return u.update([][]byte{[]byte("release"), []byte(resourceID)}, nil)
+}
