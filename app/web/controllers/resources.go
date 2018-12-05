@@ -38,22 +38,13 @@ func (c *Controller) ResourcesHandler() func(http.ResponseWriter, *http.Request)
 		}
 
 		data := &struct {
-			Username         string
-			Resources        []model.Resource
-			ResourcesDeleted model.ResourcesDeleted
-			IsAdmin          bool
+			Username  string
+			Resources []model.Resource
+			IsAdmin   bool
 		}{
 			Username:  u.Username,
 			Resources: resources,
 			IsAdmin:   isAdmin,
-		}
-
-		if isAdmin {
-			data.ResourcesDeleted, err = u.QueryResourcesDeleted()
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Unable to retrieve resources deleted from the ledger: %v", err), http.StatusInternalServerError)
-				return
-			}
 		}
 
 		renderTemplate(w, r, "resources.gohtml", data)

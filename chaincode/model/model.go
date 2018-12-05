@@ -65,15 +65,11 @@ func (a ResourceHistories) Len() int           { return len(a) }
 func (a ResourceHistories) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ResourceHistories) Less(i, j int) bool { return a[i].Time.After(a[j].Time) }
 
-// ResourcesDeleted list of resources deleted
-type ResourcesDeleted []Resource
-
 // List of object type stored in the ledger
 const (
-	ObjectTypeAdmin            = "admin"
-	ObjectTypeConsumer         = "consumer"
-	ObjectTypeResource         = "resource"
-	ObjectTypeResourcesDeleted = "resources-deleted"
+	ObjectTypeAdmin    = "admin"
+	ObjectTypeConsumer = "consumer"
+	ObjectTypeResource = "resource"
 )
 
 // List of available filter for query resources

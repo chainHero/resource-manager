@@ -74,16 +74,6 @@ func (u *User) QueryResources(filter string) ([]model.Resource, error) {
 	return resources, nil
 }
 
-// QueryResourcesDeleted query the blockchain chaincode to delete a resource
-func (u *User) QueryResourcesDeleted() (model.ResourcesDeleted, error) {
-	var resources model.ResourcesDeleted
-	err := u.query([][]byte{[]byte("resources-deleted")}, &resources)
-	if err != nil {
-		return nil, err
-	}
-	return resources, nil
-}
-
 // QueryResource query the blockchain chaincode to get resource details
 func (u *User) QueryResource(resourceID string) (*model.Resource, model.ResourceHistories, error) {
 	var resourceHistories model.ResourceHistories

@@ -29,9 +29,7 @@ func Serve(app *controllers.Controller) error {
 	http.HandleFunc("/resources", app.ResourcesHandler())
 	http.HandleFunc("/resource", app.ResourceHandler())
 	http.HandleFunc("/add-resource", app.AddResourceHandler())
-	http.HandleFunc("/delete-resource", app.DeleteResourceHandler())
 	http.HandleFunc("/acquire-resource", app.AcquireResourceHandler())
-	http.HandleFunc("/release-resource", app.ReleaseResourceHandler())
 	http.HandleFunc("/logout", app.LogoutHandler)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
